@@ -1,0 +1,106 @@
+apply plugin: "com.android.application"
+
+import com.android.build.OutputFile
+
+project.ext.react = [
+        entryFile: "index.js"
+]
+
+apply from: "../../node_modules/react-native/react.gradle"
+
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    defaultConfig {
+        applicationId "com.hqcgj.driver"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 10
+        versionName "2.0.0"
+    }
+    splits {
+        abi {
+            reset()
+            enable false
+            universalApk false  // If true, also generate a universal APK
+            include "armeabi-v7a", "x86", "arm64-v8a", "x86_64"
+        }
+    }
+
+    //签名配置
+    signingConfigs {
+        release {
+            storeFile file("sixiang.keystore")
+            storePassword "sx20190104"
+            keyAlias "sixiang"
+            keyPassword "sx20190104"
+        }
+
+        debug {
+            storeFile file("sixiang.keystore")
+            storePassword "sx20190104"
+            keyAlias "sixiang"
+            keyPassword "sx20190104"
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false  //开启混淆
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+        }
+
+        debug {
+            signingConfig signingConfigs.release
+            minifyEnabled false  //开启混淆
+            shrinkResources false //去除没有用到的资源文件，要求minifyEnabled为true才生效
+        }
+    }
+
+    // applicationVariants are e.g. debug, release
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            // For each separate APK per architecture, set a unique version code as described here:
+            // http://tools.android.com/tech-docs/new-build-system/user-guide/apk-splits
+            def versionCodes = ["armeabi-v7a": 1, "x86": 2, "arm64-v8a": 3, "x86_64": 4]
+            def abi = output.getFilter(OutputFile.ABI)
+            if (abi != null) {  // null for the universal-debug, universal-release variants
+                output.versionCodeOverride =
+                        versionCodes.get(abi) * 1048576 + defaultConfig.versionCode
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation project(':react-native-splash-screen')
+    implementation project(':react-native-amap3d')
+    implementation project(':react-native-extra-dimensions-android')
+    implementation project(':react-native-webview')
+    implementation project(':react-native-wechat')
+    implementation project(':react-native-image-picker')
+    implementation project(':@react-native-community_async-storage')
+    implementation project(':react-native-device-info')
+    implementation project(':react-native-gesture-handler')
+    implementation fileTree(dir: "libs", include: ["*.jar"])
+    implementation "androidx.appcompat:appcompat:${rootProject.ext.supportLibVersion}"
+    implementation "com.facebook.react:react-native:+"  // From node_modules
+    // 如果你需要支持Android4.0(API level 14)之前的版本
+    implementation 'com.facebook.fresco:animated-base-support:1.3.0'
+    // 如果你需要支持GIF动图
+    implementation 'com.facebook.fresco:animated-gif:1.10.0'
+}
+
+// Run this once to be able to run the application with BUCK
+// puts all compile dependencies into folder libs for BUCK to use
+task copyDownloadableDepsToLibs(type: Copy) {
+    from configurations.compile
+    into 'libs'
+}
